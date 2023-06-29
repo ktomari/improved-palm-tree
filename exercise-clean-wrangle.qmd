@@ -52,7 +52,55 @@ glimpse(lobster_traps)
 
 
 ## Exercise 1 
+
+The variable `SIZE_MM` uses `-99999` as the code for missing values (see metadata). This has the potential to cause conflicts with our analyses. Modify the data following these steps:
+
+1. Verify the SIZE_MM variable contains -99999 values using unique().
+2. Convert every -99999 value to an NA value using mutate() and na_if(). Look up the help page to see how to use na_if().
+3. Check your output data using unique().
+
+```{r}
+# verify value
+lobster_abundance %>%
+  filter(SIZE_MM == -99999) %>%
+  nrow()
+```
+```{r}
+# modify na values
+lobster_abundance <- lobster_abundance %>%
+  # mutate(SIZE_MM = ifelse(SIZE_MM == -99999, as.numeric(NA), SIZE_MM)) %>%
+  # alternative approach to above line
+  mutate(SIZE_MM = na_if(SIZE_MM, -99999))
+```
+
+```{r}
+# check
+-99999 %in% unique(lobster_abundance$SIZE_MM)
+```
+
+
 ## Exercise 2
+
+Create a subset with the data for the lobsters at Arroyo Quemado (AQUE) that have a carapace length greater than 70 mm.
+
+```{r}
+sub <- lobster_abundance %>%
+  filter(SITE == "AQUE", SIZE_MM > 70)
+
+```
+
+Create a subset with the traps’ information at all sites where abundance data is not NA. Note that you first have to identify which are these sites.
+
+```{r}
+sites <- lobster_abundance %>%
+  pull(SITE) %>%
+  unique()
+
+traps2 <- lobster_traps %>%
+  filter(SITE %in% sites)
+```
+
+
 ## Exercise 3
 ## Exercise 4 
 ## Exercise 5
