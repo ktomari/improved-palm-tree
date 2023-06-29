@@ -51,6 +51,8 @@ glimpse(lobster_traps)
 ```
 
 
+
+
 ## Exercise 1 
 
 The variable `SIZE_MM` uses `-99999` as the code for missing values (see metadata). This has the potential to cause conflicts with our analyses. Modify the data following these steps:
@@ -77,6 +79,18 @@ lobster_abundance <- lobster_abundance %>%
 # check
 -99999 %in% unique(lobster_abundance$SIZE_MM)
 ```
+### Traps
+
+This is weird too
+
+```{r}
+lobster_traps$TRAPS %>% unique()
+```
+
+```{r}
+lobster_traps <- lobster_traps %>%
+  mutate(TRAPS = na_if(TRAPS, -99999))
+```
 
 
 ## Exercise 2
@@ -89,6 +103,9 @@ sub <- lobster_abundance %>%
 
 ```
 
+
+## Exercise 3
+
 Create a subset with the traps’ information at all sites where abundance data is not NA. Note that you first have to identify which are these sites.
 
 ```{r}
@@ -100,11 +117,76 @@ traps2 <- lobster_traps %>%
   filter(SITE %in% sites)
 ```
 
+## Exercise 4
 
-## Exercise 3
-## Exercise 4 
+For each data frame, calculate the total count and total traps by site and year (i.e. total traps for every combination of site and year). Store these summary statistics in separate data frames.
+
+```{r}
+counts_abundance <- lobster_abundance %>%
+  group_by(SITE, YEAR) %>%
+  reframe(total_lobsters = sum(COUNT)) %>%
+  arrange(desc(YEAR))
+
+counts_traps <- lobster_traps %>%
+  group_by(SITE, YEAR) %>%
+  reframe(total_traps = sum(TRAPS)) %>%
+  arrange(desc(YEAR))
+
+counts_abundance %>% head()
+```
+
+```{r}
+counts_traps %>% head()
+```
+
+```{r}
+# fixed weird stuff
+counts_traps %>%
+  pull(total_traps) %>%
+  hist()
+```
+
+
 ## Exercise 5
+
+Use one of the join_ functions to get an output data frame with the following columns: SITE, YEAR, total_lobsters, total_traps.
+
+Discuss with your neighbor how the output data frame varies when you do a left_join() or a full_join(). What happens when you do an inner_join()?
+
+```{r}
+lobsters_merged_left <- counts_abundance %>%
+  left_join(counts_traps, by = c("SITE", "YEAR"))
+
+lobsters_merged_full <- counts_abundance %>%
+  full_join(counts_traps, by = c("SITE", "YEAR"))
+```
+
+```{r}
+# difference in rows
+lobsters_merged_full %>% nrow() - lobsters_merged_left %>% nrow() 
+```
+```{r}
+# find missing rows in `lobsters_merged_left`
+tmp <- lobsters_merged_left %>%
+  mutate(in_left = T)
+
+lobsters_merged_full %>%
+  full_join(tmp,  c("SITE", "YEAR","total_lobsters", "total_traps")) %>%
+  filter(is.na(in_left))
+
+rm(tmp)
+```
+
 ## Exercise 6
+
+The sites IVEE and NAPL are marine protected areas (MPAs). Read the documentation about the case_when() function and use it to add this designation to your data set.
+
+HINT: Notice you will have to create a new column with the MPA designation. What function have you previously used to create new columns?
+
+```{r}
+
+```
+
 
 ## References
 [^1]: Santa Barbara Coastal LTER, D. Reed, and R. Miller. 2022. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012 ver 8. Environmental Data Initiative. https://doi.org/10.6073/pasta/25aa371650a671bafad64dd25a39ee18 (Accessed 2023-06-29).
